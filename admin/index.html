@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Messages · Fireplace Facelifts</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@300;400;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/admin.css">
+</head>
+<body class="admin">
+
+<div class="glow" aria-hidden="true"><span class="glow-a"></span><span class="glow-b"></span><span class="grain"></span></div>
+
+<!-- ── sign in ────────────────────────────────────────────────────────── -->
+<div class="gate" id="gate">
+  <form class="gate-card glass" id="gate-form">
+    <h1 class="gate-title">Your messages</h1>
+    <p class="gate-sub">Sign in to read and answer what people have sent you.</p>
+    <div class="field">
+      <label for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="gate-btn">Sign in</button>
+    <p class="form-status" id="gate-status" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<!-- ── dashboard ──────────────────────────────────────────────────────── -->
+<div class="dash" id="dash" hidden>
+
+  <header class="dash-head glass">
+    <div class="dash-head-left">
+      <h1>Your messages</h1>
+      <p id="count-line">Loading…</p>
+    </div>
+    <div class="dash-head-right">
+      <div class="filters" role="group" aria-label="Filter messages">
+        <button class="chip is-active" data-filter="all">All</button>
+        <button class="chip" data-filter="new">New</button>
+        <button class="chip" data-filter="answered">Answered</button>
+      </div>
+      <button class="btn btn-quiet btn-sm" id="refresh-btn">Refresh</button>
+      <button class="btn btn-quiet btn-sm" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <div class="msg-list" id="msg-list"></div>
+    <p class="empty" id="empty-state" hidden>
+      Nothing here yet. When someone fills in the form on your website, it lands right here.
+    </p>
+  </div>
+
+</div>
+
+<script src="../assets/admin.js"></script>
+</body>
+</html>
