@@ -143,10 +143,10 @@ Pages project → **Settings** → **Variables and Secrets**. Add to **Productio
 |---|---|---|
 | `RESEND_API_KEY` | Secret | Resend API key |
 | `OWNER_EMAIL` | Secret | Where her notifications land |
-| `FROM_EMAIL` | Plaintext | `Fireplace Facelifts <hello@fireplacefacelifts.com>` |
+| `FROM_EMAIL` | Plaintext | `Fireplace Facelifts <hello@fireplacefacelifts.net>` |
 | `ADMIN_PASSWORD` | Secret | Her dashboard password |
 | `SESSION_SECRET` | Secret | Long random string — see below |
-| `SITE_URL` | Plaintext | `https://fireplacefacelifts.com` |
+| `SITE_URL` | Plaintext | `https://fireplacefacelifts.net` |
 
 Generate a session secret:
 
@@ -216,7 +216,7 @@ Keep images under ~400 KB each and matched in dimensions. Same camera position f
 
 ## The dashboard
 
-`https://fireplacefacelifts.com/admin/`
+`https://fireplacefacelifts.net/admin/`
 
 She signs in with `ADMIN_PASSWORD`. Session lasts 30 days so she isn't constantly logging in.
 

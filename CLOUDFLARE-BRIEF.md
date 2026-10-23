@@ -47,12 +47,17 @@ Paste the block below into Cloudflare's assistant.
 
 ## Your two values
 
-Fill these in before you start. Don't put them in the repo — they go in Cloudflare only.
+Paste these into Cloudflare as **Secrets**. They go in Cloudflare only, never in the repo.
 
-| Variable | What to use |
-|---|---|
-| `ADMIN_PASSWORD` | Whatever she'll use to sign in at `/admin/`. Something she'll actually remember. |
-| `SESSION_SECRET` | 40+ random characters. Mash the keyboard. It's never typed by a human — it only signs the login cookie. |
+**`SESSION_SECRET`** — already generated, just copy it:
+
+```
+2612135352f176a18b9d0afcfd041e6e02ebdf2d70c8ffb7fef4fb33f60a3b6f
+```
+
+Nobody ever types this one. It only signs her login cookie, so the browser can tell a real session from a forged one. 64 hex characters from a proper random source — don't shorten it, and don't bother memorising it. If it ever leaks, change it and everyone gets signed out. That's the whole blast radius.
+
+**`ADMIN_PASSWORD`** — you pick this one. It's what she types at `/admin/`, so make it something she'll actually remember. Three unrelated words beats a clever short one.
 
 ---
 
@@ -81,7 +86,7 @@ Same thing that cost time on the Aether & Ash deploy.
 
 ## After it's live
 
-**The domain.** Custom domains → Set up a domain → then the nameserver change at IONOS. Send me the domain when you have it — the page metadata still points at the old preview URL and I'll correct it.
+**The domain.** `fireplacefacelifts.net` is registered and the page metadata already points at it. Custom domains → Set up a domain → enter it → then make the nameserver change Cloudflare gives you, at IONOS. Usually under an hour to propagate.
 
 **Email alerts.** Four more variables once DNS has moved: `RESEND_API_KEY`, `OWNER_EMAIL`, `FROM_EMAIL`, `SITE_URL`. Full sequence is in SETUP.md Step 7. Until then nothing is lost — every message is in the database the moment it's sent, she just has to open the dashboard to see it.
 

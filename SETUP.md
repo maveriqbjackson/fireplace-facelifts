@@ -6,15 +6,11 @@ When you finish Step 5 the site is live, the form works, and her dashboard is re
 
 ---
 
-## Step 1 — Buy the domain (IONOS)
+## Step 1 — Domain ✅ done
 
-Search `fireplacefacelifts.com`. If it's gone, `fireplacefacelift.com` or `fireplacefacelifts.net` both work — just tell me which, because it's referenced in the page metadata.
+`fireplacefacelifts.net`, registered at IONOS. The page metadata now points at it.
 
-Skip every upsell. You don't need their private registration, email hosting, or site builder.
-
-Don't touch DNS yet.
-
-> Her Facebook page is already **Fireplace Face Lifts** — three words. Match that spelling.
+Don't touch DNS yet — Cloudflare hands you the nameservers in Step 6.
 
 ---
 
