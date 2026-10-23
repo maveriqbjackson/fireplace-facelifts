@@ -46,10 +46,15 @@ export async function onRequestPost({ request, env }) {
     return json({ ok: false, error: "We couldn't save that. Please try again." }, 500);
   }
 
-  // Notify her. Never fails the request — the message is already stored.
+  // Notify her, and reassure them. Neither can fail the request — the
+  // message is already stored and readable in the dashboard either way.
   try {
     await notify(env, { messageId, name, email, phone, city, project, body, photos });
   } catch { /* dashboard still has it */ }
+
+  try {
+    await acknowledge(env, { name, email, project, body, photos });
+  } catch { /* an unsent receipt is not worth failing their submission over */ }
 
   return json({ ok: true, id: messageId });
 }
@@ -98,7 +103,7 @@ async function notify(env, m) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: env.FROM_EMAIL || "Fireplace Facelifts <hello@fireplacefacelifts.com>",
+      from: env.FROM_EMAIL || "Fireplace Face Lifts <hello@fireplacefacelifts.net>",
       to: [env.OWNER_EMAIL],
       reply_to: m.email,
       subject: `New message from ${m.name}${m.city ? " in " + m.city : ""}`,
@@ -107,6 +112,48 @@ async function notify(env, m) {
     }),
   });
   if (!r.ok) throw new Error(await r.text());
+}
+
+/* The instant receipt. An unanswered form is the main reason people
+   assume a small business is dead, so this goes out before any human
+   has looked at it. */
+async function acknowledge(env, m) {
+  if (!env.RESEND_API_KEY) return;
+
+  const first = esc(String(m.name || "").trim().split(/\s+/)[0] || "there");
+  const shot  = m.photos?.length
+    ? `<p style="margin:0 0 18px;font:400 15px/1.7 -apple-system,sans-serif;color:#5C4E44;">We have your ${m.photos.length === 1 ? "photo" : "photos"} too — that is usually all we need to price it.</p>`
+    : `<p style="margin:0 0 18px;font:400 15px/1.7 -apple-system,sans-serif;color:#5C4E44;">If you have a photo of the fireplace, reply to this email with it attached. A phone picture is plenty, and it is usually all we need to give you a price.</p>`;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.FROM_EMAIL || "Fireplace Face Lifts <hello@fireplacefacelifts.net>",
+      to: [m.email],
+      reply_to: env.OWNER_EMAIL || undefined,
+      subject: "We got your message",
+      text: `Hi ${first},\n\nThanks for getting in touch about your fireplace. This is just to confirm it came through — a real reply is on its way.\n\nWhat you wrote:\n${m.body}\n\nFireplace Face Lifts, Fife, Washington`,
+      html: `
+      <div style="background:#E7DFD4;padding:32px 16px;">
+        <div style="max-width:560px;margin:0 auto;background:#FBF7F1;border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font:600 11px/1.4 -apple-system,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#9B3A26;">Fireplace Face Lifts</p>
+          <h1 style="margin:0 0 18px;font:300 26px/1.25 Georgia,serif;color:#2B221C;">Hi ${first}, we got it</h1>
+          <p style="margin:0 0 18px;font:400 16px/1.7 -apple-system,sans-serif;color:#2B221C;">Thanks for getting in touch about your fireplace. This is the automatic bit confirming your message arrived — a proper reply from a person is on its way.</p>
+          ${shot}
+          <div style="border-top:1px solid rgba(43,34,28,.14);padding-top:18px;margin-top:4px;">
+            <p style="margin:0 0 6px;font:600 11px/1.4 -apple-system,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#8B7C6F;">What you told us</p>
+            ${m.project ? `<p style="margin:0 0 8px;font:600 14px/1.5 -apple-system,sans-serif;color:#5C4E44;">${esc(m.project)}</p>` : ""}
+            <p style="margin:0;font:400 14px/1.65 -apple-system,sans-serif;color:#8B7C6F;white-space:pre-wrap;">${esc(m.body)}</p>
+          </div>
+          <p style="margin:24px 0 0;font:400 13px/1.6 -apple-system,sans-serif;color:#8B7C6F;">
+            Fireplace Face Lifts &middot; Fife, Washington<br>
+            Quotes are free and in writing, and the price we give includes Washington sales tax.
+          </p>
+        </div>
+      </div>`,
+    }),
+  });
 }
 
 const safeName = (n, i) => {

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Leave a review · Fireplace Face Lifts</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,300;0,400;0,600;1,300&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  body{ display:grid; place-items:center; min-height:100vh; padding:28px 0 }
+  .rv{ width:100%; max-width:600px }
+  .rv-card{ background:var(--clay-2); border:1px solid var(--rule); border-radius:18px; padding:clamp(24px,4vw,38px) }
+  .stars{ display:flex; gap:6px; margin-bottom:4px }
+  .star{ background:none; border:none; cursor:pointer; padding:4px; font-size:1.9rem; line-height:1;
+         color:rgba(43,34,28,.22); transition:color .18s ease, transform .3s var(--spring) }
+  .star:hover,.star.on{ color:var(--brick) }
+  .star:active{ transform:scale(.9) }
+  .rv-done{ display:none; text-align:center; padding:12px 0 }
+  .rv-done.on{ display:block }
+  .rv-done h2{ font-family:Bitter,serif; font-weight:300; font-size:1.9rem; margin:0 0 10px }
+</style>
+</head>
+<body>
+<main class="rv wrap">
+  <p class="eyebrow">Fireplace Face Lifts</p>
+  <h1 style="font-family:Bitter,serif;font-weight:300;font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.15;letter-spacing:-.02em;margin:0 0 10px">
+    How did we do?</h1>
+  <p class="sub" style="margin-bottom:24px">If we have done your fireplace, a couple of sentences here means more to a small business than anything we could pay for. Nothing appears on the website until it has been read.</p>
+
+  <div class="rv-card">
+    <form id="rv-form" novalidate>
+      <div class="f">
+        <label>Stars <span class="opt">optional</span></label>
+        <div class="stars" id="stars" role="group" aria-label="Rating">
+          <button class="star" type="button" data-n="1" aria-label="1 star">&#9733;</button>
+          <button class="star" type="button" data-n="2" aria-label="2 stars">&#9733;</button>
+          <button class="star" type="button" data-n="3" aria-label="3 stars">&#9733;</button>
+          <button class="star" type="button" data-n="4" aria-label="4 stars">&#9733;</button>
+          <button class="star" type="button" data-n="5" aria-label="5 stars">&#9733;</button>
+        </div>
+      </div>
+      <div class="f"><label for="rv-name">Your name</label>
+        <input id="rv-name" type="text" maxlength="80" required></div>
+      <div class="f"><label for="rv-town">Your town <span class="opt">optional</span></label>
+        <input id="rv-town" type="text" maxlength="80" placeholder="Puyallup"></div>
+      <div class="f"><label for="rv-body">How did it go?</label>
+        <textarea id="rv-body" rows="5" maxlength="1500" required
+          placeholder="What we did, how it went, and whether you would have us back."></textarea></div>
+      <div class="hp" aria-hidden="true"><label for="rv-web">Website</label>
+        <input id="rv-web" type="text" tabindex="-1" autocomplete="off"></div>
+      <button class="btn btn-brick btn-block" type="submit" id="rv-send">Send it</button>
+      <p class="form-status" id="rv-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="rv-done" id="rv-done">
+      <h2>Thank you</h2>
+      <p class="sub" style="margin:0 auto">That genuinely helps. We will read it shortly.</p>
+    </div>
+  </div>
+
+  <p class="fine" style="text-align:center;margin-top:20px">
+    <a href="../" style="color:var(--brick)">Back to the website</a>
+  </p>
+</main>
+
+<script>
+let RATING = null;
+document.querySelectorAll(".star").forEach(s => {
+  s.addEventListener("click", () => {
+    RATING = Number(s.dataset.n);
+    document.querySelectorAll(".star").forEach(o =>
+      o.classList.toggle("on", Number(o.dataset.n) <= RATING));
+  });
+});
+
+document.getElementById("rv-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("rv-send");
+  const st  = document.getElementById("rv-status");
+  const set = (t,k) => { st.textContent = t; st.className = "form-status" + (k ? " " + k : ""); };
+
+  const name = document.getElementById("rv-name").value.trim();
+  const body = document.getElementById("rv-body").value.trim();
+  if (name.length < 2) return set("What should we call you?", "err");
+  if (body.length < 10) return set("A sentence or two, please.", "err");
+
+  btn.disabled = true; btn.textContent = "Sending…"; set("", "");
+  try {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name, body, rating: RATING,
+        town: document.getElementById("rv-town").value,
+        website: document.getElementById("rv-web").value,
+      }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || !out.ok) throw new Error(out.error || "That didn't send.");
+    document.getElementById("rv-form").style.display = "none";
+    document.getElementById("rv-done").classList.add("on");
+  } catch (err) {
+    set(err.message + " Try once more.", "err");
+    btn.disabled = false; btn.textContent = "Send it";
+  }
+});
+</script>
+</body>
+</html>

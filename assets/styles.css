@@ -421,3 +421,16 @@ img{ height:auto }
 @media (max-width:620px){
   .compare-stage{ aspect-ratio:880/420 }   /* a little taller so the texture still reads */
 }
+
+/* ── reviews on the homepage ──────────────────────────────────────────── */
+.revs{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:28px }
+.rev{
+  background:var(--clay-2); border:1px solid var(--rule); border-radius:14px;
+  padding:24px 26px; display:flex; flex-direction:column; gap:12px;
+}
+.rev-stars{ color:var(--brick); letter-spacing:.14em; font-size:.92rem }
+.rev-quote{ margin:0; color:var(--ink); font-size:1.01rem; line-height:1.7; flex:1 }
+.rev-who{ margin:0; font-size:.88rem; color:var(--ink-3) }
+.rev-who b{ color:var(--ink-2); font-weight:600 }
+
+[hidden]{ display:none !important }

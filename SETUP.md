@@ -44,6 +44,22 @@ This is its own repo, not the Aether & Ash one. Keeping it separate means her si
 
 ---
 
+## Step 3.5 — Attach photo storage
+
+Her dashboard can upload job photos straight to the website from her phone. That needs one more binding.
+
+**Settings** → **Bindings** → **Add** → **R2 bucket**
+
+| Variable name | Bucket |
+|---|---|
+| `PHOTOS` | `fireplace-facelifts-photos` |
+
+Must be exactly `PHOTOS`, capitals. The bucket already exists — you're only connecting it.
+
+Without this the site works fine; the Photos tab just reports that storage isn't connected.
+
+---
+
 ## Step 4 — Attach the database
 
 The database already exists. You're only connecting it.

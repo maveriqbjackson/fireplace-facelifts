@@ -12,6 +12,9 @@
   --wrap:940px; --pad:clamp(20px,5vw,44px);
 }
 *,*::before,*::after{box-sizing:border-box}
+/* a display rule on a class beats the bare [hidden] attribute — this is why
+   the sign-in gate stayed on screen after signing in */
+[hidden]{display:none !important}
 body.admin{
   margin:0;min-height:100vh;background:var(--clay);color:var(--ink);
   font-family:"Work Sans",system-ui,sans-serif;font-size:17px;line-height:1.7;
@@ -152,3 +155,86 @@ textarea{resize:vertical;min-height:110px}
 .gate-title{font-family:"Bitter",serif;font-weight:300;font-size:2rem;margin:0 0 6px}
 .gate-sub{color:var(--ink-2);font-size:.98rem;margin:0 0 24px}
 .dash{max-width:var(--wrap);margin-inline:auto;padding:24px var(--pad) 80px}
+
+/* ── tabs ─────────────────────────────────────────────────────────────── */
+.tabs{ display:flex; gap:4px; margin-bottom:22px; border-bottom:1px solid var(--rule) }
+.tab{
+  border:none; background:none; cursor:pointer; position:relative;
+  font-family:"Work Sans",sans-serif; font-size:.98rem; font-weight:600; color:var(--ink-3);
+  padding:12px 18px; transition:color .2s ease;
+}
+.tab:hover{ color:var(--ink) }
+.tab.is-on{ color:var(--brick) }
+.tab.is-on::after{
+  content:""; position:absolute; left:14px; right:14px; bottom:-1px; height:2px; background:var(--brick);
+}
+.tab .count{
+  display:inline-block; margin-left:7px; min-width:19px; padding:1px 6px;
+  border-radius:999px; background:rgba(155,58,38,.13); color:var(--brick);
+  font-size:.72rem; font-weight:700;
+}
+.pane{ display:none } .pane.is-on{ display:block }
+
+/* ── panels ───────────────────────────────────────────────────────────── */
+.panel-card{
+  background:var(--clay-2); border:1px solid var(--rule); border-radius:14px;
+  padding:clamp(20px,3vw,30px); margin-bottom:28px;
+}
+.panel-h{ font-family:"Bitter",serif; font-weight:300; font-size:1.5rem; margin:0 0 6px }
+.panel-sub{ color:var(--ink-2); font-size:.96rem; margin:0 0 20px; max-width:60ch }
+.stack-h{ margin:0 0 16px; font-size:1.25rem }
+
+/* ── uploader ─────────────────────────────────────────────────────────── */
+.up-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px }
+@media (max-width:620px){ .up-row{ grid-template-columns:1fr } }
+.hide-file{ position:absolute; width:1px; height:1px; opacity:0; pointer-events:none }
+.up-drop{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  text-align:center; cursor:pointer; min-height:132px; padding:18px 16px; border-radius:12px;
+  border:1.5px dashed rgba(43,34,28,.3); background:#FBF7F1;
+  transition:border-color .22s ease, background-color .22s ease;
+}
+.up-drop:hover,.up-drop.over{ border-color:var(--brick); background:#fff }
+.up-drop.has{ border-style:solid; border-color:var(--brick) }
+.up-tag{ font-size:.63rem; font-weight:700; letter-spacing:.17em; text-transform:uppercase; color:var(--brick) }
+.up-main{ font-weight:600; font-size:.97rem; color:var(--ink) }
+.up-sub{ font-size:.82rem; color:var(--ink-3) }
+.up-prev{ margin-top:9px }
+.up-prev img{ width:100%; border-radius:10px; border:1px solid var(--rule); display:block }
+
+.copy-row{ display:flex; gap:9px }
+.copy-row input{ flex:1; font-size:.92rem; font-family:ui-monospace,Menlo,monospace }
+
+/* ── gallery list ─────────────────────────────────────────────────────── */
+.gal-list{ display:grid; gap:14px }
+.gal-item{
+  display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center;
+  background:var(--clay-2); border:1px solid var(--rule); border-radius:12px; padding:14px;
+}
+@media (max-width:560px){ .gal-item{ grid-template-columns:1fr; gap:12px } }
+.gal-thumbs{ display:flex; gap:6px }
+.gal-thumbs img{ width:78px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--rule); display:block }
+.gal-meta{ min-width:0 }
+.gal-cap{ margin:0 0 3px; font-size:.96rem; color:var(--ink) }
+.gal-town{ margin:0; font-size:.83rem; color:var(--ink-3) }
+
+/* ── reviews ──────────────────────────────────────────────────────────── */
+.rev-list{ display:grid; gap:14px }
+.rev-item{ background:var(--clay-2); border:1px solid var(--rule); border-radius:12px; padding:18px 20px }
+.rev-item.pending{ border-left:3px solid var(--brick) }
+.rev-top{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:8px }
+.rev-name{ font-family:"Bitter",serif; font-weight:600; font-size:1.05rem }
+.rev-town{ font-size:.85rem; color:var(--ink-3) }
+.rev-stars{ color:var(--brick); font-size:.9rem; letter-spacing:.1em }
+.rev-body{ margin:0 0 14px; color:var(--ink-2); font-size:.97rem; white-space:pre-wrap }
+.rev-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+.pill-state{
+  font-size:.65rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  padding:4px 10px; border-radius:999px;
+}
+.pill-approved{ background:rgba(74,91,77,.14); color:#3C4C3F }
+.pill-pending{ background:rgba(155,58,38,.13); color:var(--brick) }
+.pill-hidden{ background:rgba(43,34,28,.09); color:var(--ink-3) }
+.btn-danger{ border-color:rgba(140,47,28,.45); color:#8C2F1C; background:transparent }
+.btn-danger:hover{ background:#8C2F1C; color:#F6EFE7 }
+.opt{ font-weight:400; color:var(--ink-3); font-size:.82rem }

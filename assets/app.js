@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
   wireCompare();
   wireShades();
   wireQuiz();
+  loadGallery();
+  loadReviews();
   wireMotion();
 });
 
@@ -496,6 +498,64 @@ function prefill({ project, body }) {
   const target = document.getElementById("contact");
   if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
   setTimeout(() => { document.getElementById("b1")?.focus({ preventScroll: true }); }, 650);
+}
+
+/* ---- gallery, fed by whatever she has uploaded --------------------------
+   The two photos in the HTML are the fallback. If she has added her own
+   work, that replaces them — newest first — so the page is never empty and
+   never stale.                                                            */
+async function loadGallery() {
+  const grid = document.getElementById("gallery");
+  if (!grid) return;
+  try {
+    const res = await fetch("/api/photos", { headers: { Accept: "application/json" } });
+    if (!res.ok) return;
+    const { photos } = await res.json();
+    if (!photos?.length) return;
+
+    grid.innerHTML = photos.slice(0, 6).map(g => `
+      <figure class="plate reveal in">
+        <img src="${g.before}" loading="lazy" decoding="async" alt="${escAttr(g.altBefore)}">
+        <figcaption><span class="tag">Before</span>${escAttr(g.town || "")}</figcaption>
+      </figure>
+      <figure class="plate reveal in">
+        <img src="${g.after}" loading="lazy" decoding="async" alt="${escAttr(g.altAfter)}">
+        <figcaption><span class="tag">After</span>${escAttr(g.caption || "")}</figcaption>
+      </figure>`).join("");
+
+    const note = document.getElementById("work-note");
+    if (note) note.textContent = photos.length > 1
+      ? "Recent jobs around Pierce County."
+      : "A recent job.";
+  } catch { /* the built-in pair stays */ }
+}
+
+/* ---- reviews ------------------------------------------------------------
+   The section is hidden in the HTML and only ever revealed if there is
+   something real to put in it.                                            */
+async function loadReviews() {
+  const sec  = document.getElementById("reviews");
+  const grid = document.getElementById("revs");
+  if (!sec || !grid) return;
+  try {
+    const res = await fetch("/api/reviews", { headers: { Accept: "application/json" } });
+    if (!res.ok) return;
+    const { reviews } = await res.json();
+    if (!reviews?.length) return;
+
+    grid.innerHTML = reviews.slice(0, 6).map(r => `
+      <figure class="rev">
+        ${r.rating ? `<span class="rev-stars" aria-label="${r.rating} out of 5">${"\u2605".repeat(r.rating)}${"\u2606".repeat(5 - r.rating)}</span>` : ""}
+        <blockquote class="rev-quote">${escAttr(r.body)}</blockquote>
+        <figcaption class="rev-who"><b>${escAttr(r.name)}</b>${r.town ? " · " + escAttr(r.town) : ""}</figcaption>
+      </figure>`).join("");
+    sec.hidden = false;
+  } catch { /* stays hidden */ }
+}
+
+function escAttr(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 /* ---- contact form ------------------------------------------------------- */

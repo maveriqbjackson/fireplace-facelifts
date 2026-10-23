@@ -38,7 +38,7 @@
       <p id="count-line">Loading…</p>
     </div>
     <div class="dash-head-right">
-      <div class="filters" role="group" aria-label="Filter messages">
+      <div class="filters" role="group" aria-label="Filter messages" id="msg-filters">
         <button class="chip is-active" data-filter="all">All</button>
         <button class="chip" data-filter="new">New</button>
         <button class="chip" data-filter="answered">Answered</button>
@@ -48,11 +48,78 @@
     </div>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab is-on" data-tab="messages" role="tab" aria-selected="true">Messages</button>
+    <button class="tab" data-tab="photos" role="tab" aria-selected="false">Photos</button>
+    <button class="tab" data-tab="reviews" role="tab" aria-selected="false">Reviews</button>
+  </nav>
+
   <div class="dash-body">
-    <div class="msg-list" id="msg-list"></div>
-    <p class="empty" id="empty-state" hidden>
-      Nothing here yet. When someone fills in the form on your website, it lands right here.
-    </p>
+
+    <!-- ── messages ───────────────────────────────────────────────── -->
+    <section class="pane is-on" data-pane="messages">
+      <div class="msg-list" id="msg-list"></div>
+      <p class="empty" id="empty-state" hidden>
+        Nothing here yet. When someone fills in the form on your website, it lands right here.
+      </p>
+    </section>
+
+    <!-- ── photos ─────────────────────────────────────────────────── -->
+    <section class="pane" data-pane="photos">
+      <div class="panel-card">
+        <h2 class="panel-h">Add a job to the website</h2>
+        <p class="panel-sub">Two photos of the same fireplace — one before you started, one when you finished. They go straight onto the website when you save.</p>
+
+        <div class="up-row">
+          <div class="up-slot">
+            <label class="up-drop" for="up-before" id="up-before-drop">
+              <span class="up-tag">Before</span>
+              <span class="up-main" id="up-before-label">Choose the before photo</span>
+              <span class="up-sub">Straight from your camera roll</span>
+            </label>
+            <input id="up-before" type="file" accept="image/*" class="hide-file">
+            <div class="up-prev" id="up-before-prev"></div>
+          </div>
+          <div class="up-slot">
+            <label class="up-drop" for="up-after" id="up-after-drop">
+              <span class="up-tag">After</span>
+              <span class="up-main" id="up-after-label">Choose the after photo</span>
+              <span class="up-sub">Same spot as the before shot if you can</span>
+            </label>
+            <input id="up-after" type="file" accept="image/*" class="hide-file">
+            <div class="up-prev" id="up-after-prev"></div>
+          </div>
+        </div>
+
+        <div class="field"><label for="up-town">Town <span class="opt">optional</span></label>
+          <input id="up-town" type="text" maxlength="80" placeholder="Puyallup"></div>
+        <div class="field"><label for="up-caption">One line about it <span class="opt">optional</span></label>
+          <input id="up-caption" type="text" maxlength="300" placeholder="Orange brick, painted in Mortar White."></div>
+
+        <button class="btn btn-primary" id="up-save" type="button">Add it to the website</button>
+        <p class="form-status" id="up-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <h2 class="panel-h stack-h">On the website now</h2>
+      <div class="gal-list" id="gal-list"></div>
+      <p class="empty" id="gal-empty" hidden>No jobs added yet. The two photos already on the website are built in — these are the ones you add yourself.</p>
+    </section>
+
+    <!-- ── reviews ────────────────────────────────────────────────── -->
+    <section class="pane" data-pane="reviews">
+      <div class="panel-card">
+        <h2 class="panel-h">Ask a customer for a review</h2>
+        <p class="panel-sub">Send them this link when you finish a job and they are standing there happy. Nothing they write appears on the website until you approve it here.</p>
+        <div class="copy-row">
+          <input id="rev-link" type="text" readonly>
+          <button class="btn btn-quiet btn-sm" id="rev-copy" type="button">Copy</button>
+        </div>
+      </div>
+
+      <div class="rev-list" id="rev-list"></div>
+      <p class="empty" id="rev-empty" hidden>No reviews yet.</p>
+    </section>
+
   </div>
 
 </div>
