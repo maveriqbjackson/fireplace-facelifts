@@ -25,10 +25,12 @@ const CONFIG = {
         address the messages should land at, and the key arrives by email.
         No account, no card, 250 messages a month.
 
-     B) leave it null — the form posts to /api/contact instead, which is the
-        proper Cloudflare setup with the D1 database and the dashboard.
+     B) once the site is on Cloudflare Pages with the database attached,
+        /api/contact exists and the form uses that automatically — messages
+        land in the dashboard at /admin/ instead of only in an inbox.
 
-     If a key is set it wins, so clear it once the real deployment is live. */
+     You do not have to change anything when that happens. The form tries
+     the dashboard first and only falls back to the key if it is not there. */
   web3formsKey: "44dc9435-28ea-44d5-9a40-d77f2fb11036",
 
   /* ---- Letting people attach a photo ----------------------------------
@@ -73,6 +75,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCredentials();
   wireForm();
   wirePhotos();
+  wireCompare();
+  wireShades();
+  wireQuiz();
   wireMotion();
 });
 
@@ -178,11 +183,14 @@ function wireMotion() {
 }
 
 /* ---- photo attachments -------------------------------------------------- */
+let BACKEND_PRESENT = null;   // null = not yet known
 const PHOTOS = [];                     // { name, dataUrl, url, uploading }
 const MAX_PHOTOS = 3;
 
 function photosEnabled() {
-  return Boolean(CONFIG.imgbbKey) || !CONFIG.web3formsKey;
+  // The Cloudflare backend attaches photos natively; imgbb covers the relay.
+  // Unknown backend counts as available — a photo is worth more than a form that hides it.
+  return BACKEND_PRESENT !== false || Boolean(CONFIG.imgbbKey);
 }
 
 function wirePhotos() {
@@ -278,6 +286,218 @@ function drawThumbs() {
     b.addEventListener("click", () => { PHOTOS.splice(Number(b.dataset.i), 1); drawThumbs(); }));
 }
 
+/* ---- before / after slider ---------------------------------------------- */
+function wireCompare() {
+  const box = document.getElementById("compare");
+  if (!box) return;
+  const stage  = box.classList.contains("compare-stage") ? box : box.querySelector(".compare-stage");
+  const clip   = document.getElementById("cmp-clip");
+  const handle = document.getElementById("cmp-handle");
+  const inner  = clip.querySelector("img");
+  let pct = 42, dragging = false, touched = false;
+
+  const sizeInner = () => { inner.style.width = stage.clientWidth + "px"; };
+  const paint = () => {
+    clip.style.width  = pct + "%";
+    handle.style.left = pct + "%";
+    handle.setAttribute("aria-valuenow", Math.round(pct));
+  };
+
+  const fromX = (x) => {
+    const r = stage.getBoundingClientRect();
+    pct = Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100));
+    paint();
+  };
+
+  stage.addEventListener("pointerdown", (e) => {
+    dragging = true; touched = true;
+    stage.setPointerCapture(e.pointerId);
+    fromX(e.clientX);
+  });
+  stage.addEventListener("pointermove", (e) => { if (dragging) fromX(e.clientX); });
+  ["pointerup", "pointercancel"].forEach(ev =>
+    stage.addEventListener(ev, () => { dragging = false; }));
+
+  handle.addEventListener("keydown", (e) => {
+    touched = true;
+    const step = e.shiftKey ? 10 : 4;
+    if (e.key === "ArrowLeft")  { pct = Math.max(0, pct - step);   paint(); e.preventDefault(); }
+    if (e.key === "ArrowRight") { pct = Math.min(100, pct + step); paint(); e.preventDefault(); }
+    if (e.key === "Home")       { pct = 0;   paint(); e.preventDefault(); }
+    if (e.key === "End")        { pct = 100; paint(); e.preventDefault(); }
+  });
+
+  window.addEventListener("resize", sizeInner, { passive: true });
+  if (inner.complete) sizeInner(); else inner.addEventListener("load", sizeInner);
+  sizeInner();
+  paint();
+
+  // nudge it once on first view so people see it is draggable
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((ents) => {
+      ents.forEach(en => {
+        if (!en.isIntersecting) return;
+        io.disconnect();
+        let t = 0;
+        const tick = setInterval(() => {
+          if (touched) { clearInterval(tick); return; }
+          t += 1;
+          pct = 42 + Math.sin(t / 3.4) * 13 * Math.max(0, 1 - t / 24);
+          paint();
+          if (t > 24) { clearInterval(tick); if (!touched) { pct = 42; paint(); } }
+        }, 28);
+      });
+    }, { threshold: 0.45 });
+    io.observe(box);
+  }
+}
+
+/* ---- shade picker -------------------------------------------------------- */
+let CHOSEN_SHADE = null;
+
+function wireShades() {
+  const chips = document.querySelectorAll(".shade-picker .chip");
+  const img   = document.getElementById("shade-img");
+  const rtag  = document.getElementById("cmp-tag-r");
+  const name  = document.getElementById("shade-name");
+  const note  = document.getElementById("shade-note");
+  const ask   = document.getElementById("shade-send");
+  if (!chips.length || !img) return;
+
+  chips.forEach(c => {
+    c.style.setProperty("--sw", c.dataset.hex);
+    // preload so the swap is instant
+    const pre = new Image(); pre.src = `assets/shades/${c.dataset.slug}.jpg`;
+
+    c.addEventListener("click", () => {
+      chips.forEach(o => o.classList.remove("is-on"));
+      c.classList.add("is-on");
+      CHOSEN_SHADE = c.dataset.name;
+
+      img.classList.add("swapping");
+      const next = new Image();
+      next.onload = () => {
+        img.src = next.src;
+        img.alt = `Painted brick shown in ${c.dataset.name}`;
+        img.classList.remove("swapping");
+      };
+      next.src = `assets/shades/${c.dataset.slug}.jpg`;
+
+      name.textContent = c.dataset.name;
+      note.textContent = c.dataset.note;
+      if (rtag) rtag.textContent = c.dataset.name;
+    });
+  });
+
+  if (ask) ask.addEventListener("click", () => {
+    const shade = CHOSEN_SHADE || "Mortar White";
+    prefill({
+      project: "Painted brick",
+      body: `We were looking at ${shade} on the colour picker and would like to know what that would cost on ours.`,
+    });
+  });
+}
+
+/* ---- quiz ---------------------------------------------------------------- */
+const ANSWERS = {};
+
+function wireQuiz() {
+  const box = document.getElementById("quiz-box");
+  if (!box) return;
+  const steps = [...box.querySelectorAll(".q-step")];
+  const fill  = document.getElementById("q-fill");
+
+  const show = (n) => {
+    steps.forEach(s => s.classList.toggle("is-on", Number(s.dataset.step) === n));
+    fill.style.width = ((n - 1) / 3) * 100 + "%";
+  };
+
+  box.querySelectorAll(".q-opt").forEach(btn => {
+    btn.addEventListener("click", () => {
+      ANSWERS[btn.dataset.k] = btn.dataset.v;
+      const cur = Number(btn.closest(".q-step").dataset.step);
+      if (cur < 3) { show(cur + 1); return; }
+      const r = recommend(ANSWERS);
+      document.getElementById("q-title").textContent  = r.title;
+      document.getElementById("q-body").textContent   = r.body;
+      document.getElementById("q-caveat").textContent = r.caveat;
+      show(4);
+      box.dataset.rec = r.project;
+      box.dataset.recTitle = r.title;
+    });
+  });
+
+  document.getElementById("q-again").addEventListener("click", () => {
+    Object.keys(ANSWERS).forEach(k => delete ANSWERS[k]);
+    show(1);
+  });
+
+  document.getElementById("q-send").addEventListener("click", () => {
+    prefill({
+      project: box.dataset.rec || "Honestly not sure",
+      body: `The three questions on your site suggested: ${box.dataset.recTitle}. Does that sound right for ours?`,
+    });
+  });
+
+  show(1);
+}
+
+function recommend(a) {
+  const { issue, material, texture } = a;
+
+  if (issue === "mantel") return {
+    title: "The mantel on its own",
+    project: "A wood mantel",
+    body: "If the surround itself does not bother you, there is no reason to touch it. A mantel restained to something deeper and more even, or painted out entirely, is a smaller job and often the only thing the room needed.",
+    caveat: "Worth sending a photo before you commit to the brick staying as it is — sometimes the two read differently together than they do apart.",
+  };
+
+  if (texture === "keep") return {
+    title: material === "stone" ? "Limewash on the stone" : "Limewash rather than paint",
+    project: "Whitewash or limewash",
+    body: "You want the colour down but the character kept, which is exactly what limewash is for. It is thinner and worked in, so the variation underneath still shows through instead of being covered flat.",
+    caveat: "It is also the more forgiving choice if you are nervous. Less absolute than paint.",
+  };
+
+  if (issue === "heavy") return {
+    title: "Painted, in something light",
+    project: "Painted brick",
+    body: "A dark, heavy fireplace is almost always the colour rather than the size. Taking it to a soft white or a warm linen lifts the whole wall, and the mantel becomes the thing you notice instead of the mass of brick.",
+    caveat: "If the room gets very little daylight, warm linen tends to sit better than a pure white.",
+  };
+
+  if (issue === "colour") return {
+    title: "Painted brick",
+    project: "Painted brick",
+    body: material === "tile"
+      ? "Tile takes a different product than brick, but the principle is the same — refinished in place, no ripping out, no tile saw in the driveway."
+      : "Straightforward one. Orange or blotchy brick becomes one even surface, and the colour decides how bold it reads. The picker above is a fair guide to what each shade does.",
+    caveat: "Painting is close to permanent. Worth being sure, and worth seeing a sample on your own wall first.",
+  };
+
+  return {
+    title: "Send a photo before deciding anything",
+    project: "Honestly not sure",
+    body: "When you cannot name what is wrong, it is usually one of three things — the colour, the mantel, or the proportion. A photo sorts that out in about a minute, and we will tell you which one it is.",
+    caveat: "Sometimes the answer is that it is fine and the room needs something else entirely. We will say so.",
+  };
+}
+
+/* ---- shared: push a suggestion into the form and go there ---------------- */
+function prefill({ project, body }) {
+  const sel = document.getElementById("b5");
+  const txt = document.getElementById("b6");
+  if (sel && project) {
+    const hit = [...sel.options].find(o => o.text === project);
+    if (hit) sel.value = hit.value || hit.text;
+  }
+  if (txt && body && !txt.value.trim()) txt.value = body;
+
+  const target = document.getElementById("contact");
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => { document.getElementById("b1")?.focus({ preventScroll: true }); }, 650);
+}
+
 /* ---- contact form ------------------------------------------------------- */
 function wireForm() {
   const form   = document.getElementById("contact-form");
@@ -304,11 +524,33 @@ function wireForm() {
     setStatus(status, "", "");
 
     try {
-      const useWeb3 = Boolean(CONFIG.web3formsKey);
+      // Prefer the real backend (saves to the dashboard). Fall back to the
+      // relay only if it genuinely is not deployed here.
+      let res, out = {}, ok = false, viaRelay = false;
 
-      const url = useWeb3 ? "https://api.web3forms.com/submit" : "/api/contact";
-      const payload = useWeb3
-        ? {
+      if (BACKEND_PRESENT !== false) {
+        try {
+          res = await fetch("/api/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ ...data, photos: PHOTOS.filter(p => p.dataUrl).map(p => ({ name: p.name, dataUrl: p.dataUrl })) }),
+          });
+          if (res.status === 404 || res.status === 405) {
+            BACKEND_PRESENT = false;
+          } else {
+            out = await res.json().catch(() => ({}));
+            ok = res.ok && out.ok;
+            BACKEND_PRESENT = true;
+          }
+        } catch { BACKEND_PRESENT = false; }
+      }
+
+      if (!ok && BACKEND_PRESENT === false && CONFIG.web3formsKey) {
+        viaRelay = true;
+        res = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
             access_key: CONFIG.web3formsKey,
             subject: `Fireplace enquiry from ${data.name}${data.city ? " in " + data.city : ""}`,
             from_name: "Fireplace Face Lifts website",
@@ -319,17 +561,12 @@ function wireForm() {
             project: data.project || "not said",
             message: data.body + photoLines(),
             botcheck: data.website || "",
-          }
-        : { ...data, photos: PHOTOS.filter(p => p.dataUrl).map(p => ({ name: p.name, dataUrl: p.dataUrl })) };
+          }),
+        });
+        out = await res.json().catch(() => ({}));
+        ok = Boolean(out.success);
+      }
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const out = await res.json().catch(() => ({}));
-
-      const ok = useWeb3 ? out.success : (res.ok && out.ok);
       if (!ok) throw new Error(out.message || out.error || "Something went wrong.");
 
       form.reset();
