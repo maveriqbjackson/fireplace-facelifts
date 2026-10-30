@@ -49,10 +49,10 @@ Paste the block below into Cloudflare's assistant.
 
 Paste these into Cloudflare as **Secrets**. They go in Cloudflare only, never in the repo.
 
-**`SESSION_SECRET`** — already generated, just copy it:
+**`SESSION_SECRET`** — generate it fresh, never commit it:
 
 ```
-2612135352f176a18b9d0afcfd041e6e02ebdf2d70c8ffb7fef4fb33f60a3b6f
+(not stored here; generate a fresh 64-character value and paste it straight into Cloudflare)
 ```
 
 Nobody ever types this one. It only signs her login cookie, so the browser can tell a real session from a forged one. 64 hex characters from a proper random source — don't shorten it, and don't bother memorising it. If it ever leaks, change it and everyone gets signed out. That's the whole blast radius.
