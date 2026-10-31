@@ -3,3 +3,5 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 Disallow: /review/
+
+Sitemap: https://fireplacefacelifts.net/sitemap.xml
