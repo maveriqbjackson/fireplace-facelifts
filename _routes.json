@@ -1,5 +1,12 @@
 {
   "version": 1,
-  "include": ["/api/*", "/README.md", "/SETUP.md", "/CLOUDFLARE-BRIEF.md", "/schema.sql"],
+  "include": [
+    "/api/*",
+    "/README.md",
+    "/SETUP.md",
+    "/CLOUDFLARE-BRIEF.md",
+    "/schema.sql",
+    "/ash-status"
+  ],
   "exclude": []
 }
