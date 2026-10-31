@@ -92,3 +92,8 @@ export async function onRequestPost({ request, env }) {
     return json({ ok: true, fallback: true, reason: "unavailable" });
   }
 }
+
+/* GET /api/ash — says only whether Ash is switched on. No secrets, no text. */
+export async function onRequestGet({ env }) {
+  return json({ ok: true, ai: !!env.AI });
+}
