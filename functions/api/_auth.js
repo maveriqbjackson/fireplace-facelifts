@@ -21,7 +21,7 @@ export async function makeSession(secret) {
 }
 
 /* Signed in = Cloudflare Access emailed them a code, and their email is Mav's,
-   or has a Fireplace Facelifts role on the People screen in Mav HQ
+   or has a Fireplace Facelifts role on the People screen in Ash HQ
    (aetherandash.digital/hq). No password. Needs ACCESS_TEAM_DOMAIN, ACCESS_AUD
    and TEAM_SYNC_KEY on this site. */
 let teamCache = { at: 0, people: null };
