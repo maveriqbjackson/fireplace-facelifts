@@ -7,7 +7,7 @@ import { verifySession, json, unauthorized } from "./_auth.js";
 
 /* ---- public read, and her full list ------------------------------------- */
 export async function onRequestGet({ request, env }) {
-  const signedIn = await verifySession(request, env.SESSION_SECRET);
+  const signedIn = await verifySession(request, env);
 
   try {
     const { results } = signedIn
@@ -73,7 +73,7 @@ export async function onRequestPost({ request, env }) {
 
 /* ---- she approves, hides, or deletes ------------------------------------ */
 export async function onRequestPatch({ request, env }) {
-  if (!await verifySession(request, env.SESSION_SECRET)) return unauthorized();
+  if (!await verifySession(request, env)) return unauthorized();
 
   let data;
   try { data = await request.json(); } catch { data = {}; }
@@ -90,7 +90,7 @@ export async function onRequestPatch({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-  if (!await verifySession(request, env.SESSION_SECRET)) return unauthorized();
+  if (!await verifySession(request, env)) return unauthorized();
   let data;
   try { data = await request.json(); } catch { data = {}; }
   const id = Number(data.id);

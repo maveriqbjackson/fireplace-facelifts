@@ -1,33 +1,15 @@
-import { makeSession, sessionCookie, clearCookie, json } from "./_auth.js";
+import { json, signedInEmail } from "./_auth.js";
 
-/* POST /api/login — sign in */
-export async function onRequestPost({ request, env }) {
-  if (!env.ADMIN_PASSWORD || !env.SESSION_SECRET) {
-    return json({ ok: false, error: "The dashboard isn't set up yet." }, 500);
-  }
-
-  let data;
-  try { data = await request.json(); }
-  catch { return json({ ok: false, error: "We couldn't read that." }, 400); }
-
-  const given = String(data.password || "");
-  const real  = String(env.ADMIN_PASSWORD);
-
-  // constant-time comparison
-  let diff = given.length ^ real.length;
-  for (let i = 0; i < Math.max(given.length, real.length); i++) {
-    diff |= (given.charCodeAt(i) || 0) ^ (real.charCodeAt(i) || 0);
-  }
-  if (diff !== 0) {
-    await new Promise(r => setTimeout(r, 400)); // slow down guessing
-    return json({ ok: false, error: "That password didn't work." }, 401);
-  }
-
-  const token = await makeSession(env.SESSION_SECRET);
-  return json({ ok: true }, 200, { "Set-Cookie": sessionCookie(token) });
+/* Sign-in is by email code now (Cloudflare Access). No password.
+   GET  /api/login  -> who is signed in, or 401
+   POST /api/login  -> no longer used */
+export async function onRequestGet({ request, env }) {
+  const email = await signedInEmail(request, env);
+  return email ? json({ ok: true, email }) : json({ ok: false, error: "Not signed in." }, 401);
 }
-
-/* DELETE /api/login — sign out */
+export async function onRequestPost() {
+  return json({ ok: false, error: "Sign-in is by email code now. Reload the page." }, 410);
+}
 export async function onRequestDelete() {
-  return json({ ok: true }, 200, { "Set-Cookie": clearCookie() });
+  return json({ ok: true, signout: "/cdn-cgi/access/logout" });
 }

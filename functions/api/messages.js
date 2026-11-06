@@ -2,7 +2,7 @@ import { verifySession, json, unauthorized } from "./_auth.js";
 
 /* GET /api/messages — everything, newest first, with replies attached */
 export async function onRequestGet({ request, env }) {
-  if (!await verifySession(request, env.SESSION_SECRET)) return unauthorized();
+  if (!await verifySession(request, env)) return unauthorized();
 
   // is_test = 0 keeps any seeded rows out of her view.
   const { results: messages } = await env.DB.prepare(

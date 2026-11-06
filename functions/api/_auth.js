@@ -1,5 +1,5 @@
-/* Shared session helpers.
-   Signed cookie — the password is never stored in the browser. */
+/* Shared sign-in helpers. Sign-in is by email code (Cloudflare Access). */
+import { accessEmail, OWNERS } from "../_shared/access.js";
 
 const COOKIE = "ff_session";
 const TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days — she shouldn't have to sign in constantly
@@ -20,21 +20,30 @@ export async function makeSession(secret) {
   return `${expires}.${sig}`;
 }
 
-export async function verifySession(request, secret) {
-  const raw = request.headers.get("Cookie") || "";
-  const match = raw.match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`));
-  if (!match) return false;
-
-  const [expires, sig] = decodeURIComponent(match[1]).split(".");
-  if (!expires || !sig) return false;
-  if (Number(expires) < Date.now()) return false;
-
-  const expected = await hmac(secret, expires);
-  // constant-time-ish comparison
-  if (expected.length !== sig.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
-  return diff === 0;
+/* Signed in = Cloudflare Access emailed them a code, and their email is Mav's,
+   or has a Fireplace Facelifts role on the People screen in Mav HQ
+   (aetherandash.digital/hq). No password. Needs ACCESS_TEAM_DOMAIN, ACCESS_AUD
+   and TEAM_SYNC_KEY on this site. */
+let teamCache = { at: 0, people: null };
+async function fireplaceTeam(env) {
+  if (teamCache.people && Date.now() - teamCache.at < 60e3) return teamCache.people;
+  if (!env.TEAM_SYNC_KEY) return [];
+  try {
+    const r = await fetch("https://aetherandash.digital/api/team/roles?area=fireplace", { headers: { "x-team-key": env.TEAM_SYNC_KEY } });
+    if (!r.ok) return teamCache.people || [];
+    const j = await r.json();
+    teamCache = { at: Date.now(), people: j.people || [] };
+    return teamCache.people;
+  } catch { return teamCache.people || []; }
+}
+export async function signedInEmail(request, env) {
+  const email = await accessEmail(request, env);
+  if (!email) return null;
+  if (OWNERS.includes(email)) return email;
+  return (await fireplaceTeam(env)).some((p) => String(p.email).toLowerCase() === email) ? email : null;
+}
+export async function verifySession(request, env) {
+  return !!(await signedInEmail(request, env));
 }
 
 export function sessionCookie(value, maxAge = TTL_SECONDS) {

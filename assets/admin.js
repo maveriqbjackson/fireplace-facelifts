@@ -24,37 +24,12 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ---- auth --------------------------------------------------------------- */
 async function signIn(e) {
   e.preventDefault();
-  const pw     = document.getElementById("pw").value;
-  const btn    = document.getElementById("gate-btn");
-  const status = document.getElementById("gate-status");
-
-  btn.disabled = true;
-  btn.textContent = "Signing in…";
-  status.textContent = "";
-
-  try {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: pw }),
-    });
-    if (!res.ok) throw new Error("That password didn't work. Try again.");
-    document.getElementById("pw").value = "";
-    await load(true);
-  } catch (err) {
-    status.textContent = err.message;
-    status.className = "form-status err";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Sign in";
-  }
+  location.reload(); // Cloudflare asks for the email code again
 }
 
 async function signOut() {
-  await fetch("/api/login", { method: "DELETE" }).catch(() => {});
   MESSAGES = [];
-  document.getElementById("dash").hidden = true;
-  document.getElementById("gate").hidden = false;
+  location.href = "/cdn-cgi/access/logout";
 }
 
 /* ---- load --------------------------------------------------------------- */

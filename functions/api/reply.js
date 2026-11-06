@@ -2,7 +2,7 @@ import { verifySession, json, unauthorized } from "./_auth.js";
 
 /* POST /api/reply — she writes back; it lands in the customer's inbox */
 export async function onRequestPost({ request, env }) {
-  if (!await verifySession(request, env.SESSION_SECRET)) return unauthorized();
+  if (!await verifySession(request, env)) return unauthorized();
 
   let data;
   try { data = await request.json(); }

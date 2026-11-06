@@ -33,7 +33,7 @@ export async function onRequestGet({ env }) {
 
 /* ---- her dashboard: add a pair ------------------------------------------ */
 export async function onRequestPost({ request, env }) {
-  if (!await verifySession(request, env.SESSION_SECRET)) return unauthorized();
+  if (!await verifySession(request, env)) return unauthorized();
   if (!env.PHOTOS) return json({ ok: false, error: "Photo storage isn't connected yet." }, 500);
 
   let data;
@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }) {
 
 /* ---- her dashboard: remove one ------------------------------------------ */
 export async function onRequestDelete({ request, env }) {
-  if (!await verifySession(request, env.SESSION_SECRET)) return unauthorized();
+  if (!await verifySession(request, env)) return unauthorized();
 
   let data;
   try { data = await request.json(); } catch { data = {}; }
